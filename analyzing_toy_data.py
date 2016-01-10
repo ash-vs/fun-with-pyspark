@@ -26,7 +26,9 @@ print "All items: {0}".format(all_items)
 json_rdd = file_rdd.map(lambda x: json.loads(x))
 
 # First convert the dictionary into a tuple with the number of
-# purchases converted from a string to a number 
+# purchases converted from a string to a number since reduceByKey
+# cannot accept a dictionary, and we need the number of items 
+# purchased in numeric format for later operations
 mapped_big_spenders_rdd = json_rdd.map(lambda x: tuple((x.keys()[0], int(x.values()[0]))))
 print "Mapped big spender output:\n{0}".format(mapped_big_spenders_rdd.collect())
 
