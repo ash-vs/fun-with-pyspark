@@ -39,3 +39,8 @@ end_time = time.time()
 
 print "Time elapsed: {0} seconds".format(end_time - start_time)
 print results
+
+# Save the headers before stripping them off of the data
+header_line = airline_no_quote_rdd.first()
+header_line_list = header_line.split(',')
+print "Headers:\n{0}".format(header_line_list)
