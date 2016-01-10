@@ -44,3 +44,10 @@ print results
 header_line = airline_no_quote_rdd.first()
 header_line_list = header_line.split(',')
 print "Headers:\n{0}".format(header_line_list)
+
+# Now strip the headers off of our data by applying
+# a filter that removes any row of data that isn't
+# equal to the header_line we extracted earlier 
+airline_no_header_rdd = airline_no_quote_rdd.filter(lambda row: row != header_line)
+check_list = airline_no_header_rdd.take(4)
+print "Data without headers:\n{0}".format(check_list)
