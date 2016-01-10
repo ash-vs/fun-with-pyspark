@@ -62,7 +62,8 @@ def make_row_dict(row):
 	# use the tuples created by zip() to create a dictionary
 	row_dict = dict(zip(header_line_list, row_line_list))
 	return row_dict
-	
+
+# create a new RDD that turns each row into a dictionary
 airline_rows_as_dicts_rdd = airline_no_header_rdd.map(make_row_dict)
 check_list = airline_rows_as_dicts_rdd.take(2)
 print "Data in key-value pairs:\n{0}".format(check_list)
