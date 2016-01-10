@@ -1,5 +1,6 @@
 import pyspark as ps
 import time
+import numpy as np
 
 sc = ps.SparkContext()
 
@@ -68,3 +69,61 @@ airline_rows_as_dicts_rdd = airline_no_header_rdd.map(make_row_dict)
 check_list = airline_rows_as_dicts_rdd.take(2)
 print "Data in key-value pairs:\n{0}".format(check_list)
 
+# Let's now try to rank airports 
+# in terms of arrival/departure delays
+
+# In each row, the arr_delay corresponds to the dest_airport_id
+# and the dep_delay corresponds to the origin_airport_id
+
+# Let's transform our data to group delays with the corresponding
+# airports rather than grouped by flight
+
+# Extract tuples of the destination airports and arrival delays
+# and return the delay value casted as a float for future computation
+destination_airport_rdd = airline_rows_as_dicts_rdd.map(lambda row: \
+	(row['DEST_AIRPORT_ID'], \
+	float(row['ARR_DELAY']) if row['ARR_DELAY'] else 0))
+check_list = destination_airport_rdd.take(2)
+print "Destination airports and arrival delays:\n{0}".format(check_list)
+
+# Extract tuples of the origin airports and departure delays
+# and return the delay value casted as a float for future computation
+origin_airport_rdd = airline_rows_as_dicts_rdd.map(lambda row: \
+	(row['ORIGIN_AIRPORT_ID'], \
+	float(row['DEP_DELAY']) if row['DEP_DELAY'] else 0))
+check_list = origin_airport_rdd.take(2)
+print "Origin airports and departure delays:\n{0}".format(check_list)
+
+# Find the mean delay for departures and arrivals for each airport
+mean_arrival_delay_by_destination_airport_rdd = \
+	destination_airport_rdd.groupByKey().mapValues(lambda delays: np.mean(delays.data))
+check_list = mean_arrival_delay_by_destination_airport_rdd.take(2)
+print "Mean arrival delays by destination airport:\n{0}".format(check_list)
+
+mean_departure_delay_by_origin_airport_rdd = \
+	origin_airport_rdd.groupByKey().mapValues(lambda delays: np.mean(delays.data))
+check_list = mean_arrival_delay_by_destination_airport_rdd.take(2)
+print "Mean departure delays by origin airport:\n{0}".format(check_list)
+
+# Find the highest-ranked and lowest-ranked airports by mean delay times
+# Caveat - It would be more rigorous to take departure delays into account
+# 		   when calculating arrival delays since the former affects the latter
+destination_airports_sorted_by_mean_arrival_delay_rdd = \
+	mean_arrival_delay_by_destination_airport_rdd.sortBy(lambda t: t[1], ascending=True)
+check_list = destination_airports_sorted_by_mean_arrival_delay_rdd.take(10)
+print "Ten highest-ranked airports by arrival delay:\n{0}".format(check_list) 
+
+destination_airports_sorted_by_mean_arrival_delay_rdd = \
+	mean_arrival_delay_by_destination_airport_rdd.sortBy(lambda t: t[1], ascending=False)
+check_list = destination_airports_sorted_by_mean_arrival_delay_rdd.take(10)
+print "Ten lowest-ranked airports by arrival delay:\n{0}".format(check_list) 
+
+origin_airports_sorted_by_mean_departure_delay_rdd = \
+	mean_departure_delay_by_origin_airport_rdd.sortBy(lambda t: t[1], ascending=True)
+check_list = origin_airports_sorted_by_mean_departure_delay_rdd.take(10)
+print "Ten highest-ranked airports by departure delay:\n{0}".format(check_list)
+
+origin_airports_sorted_by_mean_departure_delay_rdd = \
+	mean_departure_delay_by_origin_airport_rdd.sortBy(lambda t: t[1], ascending=False)
+check_list = origin_airports_sorted_by_mean_departure_delay_rdd.take(10)
+print "Ten lowest-ranked airports by departure delay:\n{0}".format(check_list)
